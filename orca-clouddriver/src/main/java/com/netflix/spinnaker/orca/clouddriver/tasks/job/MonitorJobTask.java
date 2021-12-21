@@ -24,6 +24,7 @@ import com.netflix.spinnaker.orca.api.pipeline.TaskResult;
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution;
 import com.netflix.spinnaker.orca.clouddriver.KatoService;
 import com.netflix.spinnaker.orca.clouddriver.tasks.MonitorKatoTask;
+import groovy.lang.MetaClass;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,5 +64,32 @@ public class MonitorJobTask extends MonitorKatoTask {
   @Override
   public void onCancel(@Nonnull StageExecution stage) {
     jobUtils.cancelWait(stage);
+  }
+
+  // Workaround since Kotlin compiler can't recognize Groovy synthetic methods in super classes
+  // See: https://youtrack.jetbrains.com/issue/KT-27998
+  @Override
+  public Object invokeMethod(String s, Object o) {
+    return super.invokeMethod(s, o);
+  }
+
+  @Override
+  public Object getProperty(String s) {
+    return super.getProperty(s);
+  }
+
+  @Override
+  public void setProperty(String s, Object o) {
+    super.setProperty(s, o);
+  }
+
+  @Override
+  public MetaClass getMetaClass() {
+    return super.getMetaClass();
+  }
+
+  @Override
+  public void setMetaClass(MetaClass metaClass) {
+    super.setMetaClass(metaClass);
   }
 }

@@ -41,6 +41,7 @@ dependencies {
   implementation(project(":orca-clouddriver"))
   implementation(project(":orca-clouddriver-provider-titus"))
   implementation(project(":orca-core"))
+  implementation(project(":orca-coveo"))
   implementation(project(":orca-deploymentmonitor"))
   implementation(project(":orca-dry-run"))
   implementation(project(":orca-echo"))

@@ -30,6 +30,7 @@ import com.netflix.spinnaker.orca.clouddriver.utils.CloudProviderAware
 import com.netflix.spinnaker.orca.front50.Front50Service
 import com.netflix.spinnaker.orca.clouddriver.exception.JobFailedException
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
+import groovy.transform.CompileStatic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -43,6 +44,7 @@ import java.time.format.DateTimeParseException
 import java.util.concurrent.TimeUnit
 
 @Component
+@CompileStatic
 public class WaitOnJobCompletion implements CloudProviderAware, OverridableTimeoutRetryableTask {
   private final Logger log = LoggerFactory.getLogger(getClass())
 
@@ -108,7 +110,7 @@ public class WaitOnJobCompletion implements CloudProviderAware, OverridableTimeo
   @Override
   TaskResult execute(StageExecution stage) {
     String account = getCredentials(stage)
-    Map<String, List<String>> jobs = stage.context."deploy.jobs"
+    Map<String, List<String>> jobs = (stage.context."deploy.jobs" as Map<String, List<String>>)
 
     def status = ExecutionStatus.RUNNING
 
@@ -132,7 +134,7 @@ public class WaitOnJobCompletion implements CloudProviderAware, OverridableTimeo
 
       def name = names[0]
       def parsedName = Names.parseName(name)
-      String appName = stage.context.moniker?.app ?: stage.context.application ?: stage.execution.application
+      String appName = (stage.context.moniker as Map)?.app ?: stage.context.application ?: stage.execution.application
 
       if (appName == null && applicationExists(parsedName.app)) {
         appName = parsedName.app
@@ -162,7 +164,7 @@ public class WaitOnJobCompletion implements CloudProviderAware, OverridableTimeo
           Map<String, Object> properties = [:]
           try {
             retrySupport.retry({
-              properties = katoRestService.getFileContents(appName, account, location, name, stage.context.propertyFile)
+              properties = katoRestService.getFileContents(appName, account, location as String, name as String, stage.context.propertyFile as String)
             }, 6, 5000, false) // retry for 30 seconds
           } catch (Exception e) {
             if (status == ExecutionStatus.SUCCEEDED) {

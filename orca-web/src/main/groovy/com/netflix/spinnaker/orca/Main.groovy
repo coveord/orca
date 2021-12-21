@@ -26,6 +26,7 @@ import com.netflix.spinnaker.orca.config.KeelConfiguration
 import com.netflix.spinnaker.orca.config.OrcaConfiguration
 import com.netflix.spinnaker.orca.config.PipelineTemplateConfiguration
 import com.netflix.spinnaker.orca.config.RedisConfiguration
+import com.netflix.spinnaker.orca.coveo.config.CoveoConfiguration
 import com.netflix.spinnaker.orca.echo.config.EchoConfiguration
 import com.netflix.spinnaker.orca.flex.config.FlexConfiguration
 import com.netflix.spinnaker.orca.front50.config.Front50Configuration
@@ -62,7 +63,8 @@ import org.springframework.scheduling.annotation.EnableAsync
   WebhookConfiguration,
   KeelConfiguration,
   CloudFoundryConfiguration,
-  GremlinConfiguration
+  GremlinConfiguration,
+  CoveoConfiguration
 ])
 @SpringBootApplication(
     scanBasePackages = [
