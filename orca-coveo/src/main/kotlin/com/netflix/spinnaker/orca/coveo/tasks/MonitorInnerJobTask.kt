@@ -21,7 +21,6 @@ import com.netflix.spectator.api.Registry
 import com.netflix.spinnaker.kork.core.RetrySupport
 import com.netflix.spinnaker.kork.dynamicconfig.DynamicConfigService
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult
-import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
 import com.netflix.spinnaker.orca.clouddriver.KatoService
 import com.netflix.spinnaker.orca.clouddriver.tasks.job.JobUtils
@@ -30,7 +29,7 @@ import com.netflix.spinnaker.orca.coveo.tasks.job.InnerJobAware
 import org.springframework.stereotype.Component
 
 private val CONTEXT_KEYS_TO_COPY =
-  listOf(
+  setOf(
     "kato.task.terminalRetryCount",
     "kato.task.firstNotFoundRetry",
     "kato.task.notFoundRetryCount",
@@ -52,10 +51,10 @@ class MonitorInnerJobTask(
   MonitorJobTask(katoService, registry, jobUtils, dynamicConfigService, retrySupport) {
   override fun execute(stage: StageExecution): TaskResult {
     val taskResult = super.execute(stage)
-    val jobContext = getSelectedContext(taskResult, CONTEXT_KEYS_TO_COPY)
+    val jobContextToCopy = getContextToCopy(taskResult, CONTEXT_KEYS_TO_COPY)
 
     return TaskResult.builder(taskResult.status)
-      .context(taskResult.context + getUpdatedInnerJobContext(stage, jobContext))
+      .context(taskResult.context + getUpdatedContextWithInnerJob(stage, jobContextToCopy))
       .outputs(taskResult.outputs)
       .build()
   }

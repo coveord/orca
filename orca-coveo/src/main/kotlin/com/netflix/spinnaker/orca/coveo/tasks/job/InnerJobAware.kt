@@ -30,6 +30,10 @@ interface InnerJobAware {
     return stage.context[innerJobKey] as? Map<String, Any?>?
   }
 
+  fun getInnerJobContext(stage: StageExecution, innerJob: InnerJob): Map<String, Any?>? {
+    return stage.context[innerJob.innerJobKey] as? Map<String, Any?>?
+  }
+
   fun getCurrentInnerJobContext(stage: StageExecution): Map<String, Any?> {
     return getInnerJobContext(stage, getCurrentInnerJobKey(stage)) ?: mapOf()
   }
@@ -42,7 +46,7 @@ interface InnerJobAware {
     return getInnerJobOutputs(stage, getCurrentInnerJobKey(stage)) ?: mapOf()
   }
 
-  fun getUpdatedInnerJobContext(
+  fun getUpdatedContextWithInnerJob(
     stage: StageExecution,
     updatedInnerJobContext: Map<String, Any?>
   ): Map<String, Any?> {
@@ -51,7 +55,7 @@ interface InnerJobAware {
     )
   }
 
-  fun getUpdatedInnerJobOutputs(
+  fun getUpdatedOutputsWithInnerJob(
     stage: StageExecution,
     updatedInnerJobOutputs: Map<String, Any?>
   ): Map<String, Any?> {
@@ -60,28 +64,16 @@ interface InnerJobAware {
     )
   }
 
-  fun getSelectedContext(taskResult: TaskResult, keys: List<String>): Map<String, Any?> {
-    val jobContext = mutableMapOf<String, Any?>()
-    keys.forEach { key ->
-      taskResult.context[key]?.let { jobContext[key] = it }
-    }
-    return jobContext.toMap()
+  fun getContextToCopy(taskResult: TaskResult, keys: Set<String>): Map<String, Any?> {
+    return taskResult.context.filterKeys { keys.contains(it) }
   }
 
-  fun getSelectedOutputs(taskResult: TaskResult, keys: List<String>): Map<String, Any?> {
-    val outputs = mutableMapOf<String, Any?>()
-    keys.forEach { key ->
-      taskResult.outputs[key]?.let { outputs[key] = it }
-    }
-    return outputs.toMap()
-  }
-
-  fun isInnerJobSkipped(stage: StageExecution): Boolean {
-    return getCurrentInnerJobContext(stage).getOrDefault("isInnerJobSkipped", false) as? Boolean ?: false
+  fun getOutputsToCopy(taskResult: TaskResult, keys: Set<String>): Map<String, Any?> {
+    return taskResult.outputs.filterKeys { keys.contains(it) }
   }
 }
 
 inline fun <reified O> InnerJobAware.mapInnerJobTo(stage: StageExecution): O {
-  // Use the JSON Pointer Syntax
+  /** Use the JSON Pointer Syntax */
   return stage.mapTo("/${getCurrentInnerJobKey(stage)}")
 }

@@ -20,7 +20,6 @@ package com.netflix.spinnaker.orca.coveo.tasks
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.kork.core.RetrySupport
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult
-import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
 import com.netflix.spinnaker.orca.clouddriver.KatoRestService
 import com.netflix.spinnaker.orca.clouddriver.tasks.job.JobUtils
@@ -30,7 +29,7 @@ import com.netflix.spinnaker.orca.front50.Front50Service
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
 import org.springframework.stereotype.Component
 
-private val OUTPUTS_TO_COPY = listOf("jobStatus", "completionDetails")
+private val OUTPUTS_TO_COPY = setOf("jobStatus", "completionDetails")
 
 @Component
 class WaitOnInnerJobCompletionTask(
@@ -52,11 +51,11 @@ class WaitOnInnerJobCompletionTask(
   ) {
   override fun execute(stage: StageExecution): TaskResult {
     val taskResult = super.execute(stage)
-    val jobOutputs = getSelectedOutputs(taskResult, OUTPUTS_TO_COPY)
+    val jobOutputsToCopy = getOutputsToCopy(taskResult, OUTPUTS_TO_COPY)
 
     return TaskResult.builder(taskResult.status)
-      .context(taskResult.context + getUpdatedInnerJobContext(stage, jobOutputs))
-      .outputs(taskResult.outputs + getUpdatedInnerJobOutputs(stage, jobOutputs))
+      .context(taskResult.context + getUpdatedContextWithInnerJob(stage, jobOutputsToCopy))
+      .outputs(taskResult.outputs + getUpdatedOutputsWithInnerJob(stage, jobOutputsToCopy))
       .build()
   }
 }

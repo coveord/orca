@@ -15,17 +15,13 @@
  *
  */
 
-package com.netflix.spinnaker.orca.coveo.ext
+package com.netflix.spinnaker.orca.coveo.tasks.job
 
-import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
+import com.fasterxml.jackson.annotation.JsonProperty
 
-// Manually skip a stage
-fun StageExecution.skipStage() {
-  context["manualSkip"] = true
-}
+enum class TerraformStageInnerJob(@JsonProperty val key: String): InnerJob {
+  PLAN("terraformPlan"),
+  APPLY("terraformApply");
 
-// Skip a stage and set the
-fun StageExecution.skipStageSinceNoChange() {
-  skipStage()
-  context["noChanges"] = true
+  override val innerJobKey: String = key
 }

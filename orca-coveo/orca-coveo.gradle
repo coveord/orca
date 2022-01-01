@@ -24,6 +24,7 @@ dependencies {
   implementation(project(":orca-echo"))
   implementation(project(":orca-front50"))
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("io.sentry:sentry:$sentryVersion")
   implementation("org.springframework:spring-context")
   implementation("org.springframework.boot:spring-boot-autoconfigure")
 

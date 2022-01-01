@@ -34,6 +34,16 @@ class ConsumeInnerArtifactTask(
   retrySupport: RetrySupport
 ) : InnerJobAware, ConsumeArtifactTask(artifactUtils, oortService, retrySupport) {
   override fun execute(stage: StageExecution): TaskResult {
+    val nothingToDo =
+      !getCurrentInnerJobContext(stage)
+        .getOrDefault("consumeArtifactSource", "")
+        .toString()
+        .equals("artifact", ignoreCase = true)
+
+    if (nothingToDo) {
+      return TaskResult.builder(ExecutionStatus.SUCCEEDED).build()
+    }
+
     val taskResult = super.execute(stage)
 
     // TODO: add required outputs

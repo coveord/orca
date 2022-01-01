@@ -16,86 +16,59 @@
 
 package com.netflix.spinnaker.orca.coveo.pipeline
 
+import com.netflix.spinnaker.orca.api.pipeline.CancellableStage
+import com.netflix.spinnaker.orca.api.pipeline.graph.StageDefinitionBuilder
 import com.netflix.spinnaker.orca.api.pipeline.graph.TaskNode
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
-import com.netflix.spinnaker.orca.clouddriver.pipeline.job.RunJobStage
-import com.netflix.spinnaker.orca.clouddriver.pipeline.job.RunJobStageDecorator
 import com.netflix.spinnaker.orca.clouddriver.tasks.job.DestroyJobTask
 import com.netflix.spinnaker.orca.coveo.tasks.*
+import com.netflix.spinnaker.orca.coveo.tasks.job.InnerJob
 import com.netflix.spinnaker.orca.coveo.tasks.job.InnerJobAware
-import com.netflix.spinnaker.orca.echo.pipeline.ManualJudgmentStage.WaitForManualJudgmentTask
+import com.netflix.spinnaker.orca.coveo.tasks.job.TerraformStageInnerJob
 import com.netflix.spinnaker.orca.ext.withTask
 import org.springframework.stereotype.Component
 
-val INNER_KEYS_TO_CLEAR_ON_RESTART =
+private val INNER_KEYS_TO_CLEAR_ON_RESTART =
   setOf("completionDetails", "deploy.jobs", "jobStatus", "propertyFileContents")
 
 @Component
-class TerraformStage(
-  destroyJobTask: DestroyJobTask,
-  runJobStageDecorators: List<RunJobStageDecorator>
-) : RunJobStage(destroyJobTask, runJobStageDecorators), InnerJobAware {
+class TerraformStage(destroyJobTask: DestroyJobTask) : StageDefinitionBuilder, CancellableStage, InnerJobAware {
   override fun taskGraph(stage: StageExecution, builder: TaskNode.Builder) {
-    // Plan
-    stage.context["currentInnerJob"] = "terraformPlan"
-    appendTerraformStage("terraformPlan", stage, builder)
+    stage.context["currentInnerJob"] = TerraformStageInnerJob.PLAN.key
 
-    // Approval
-    builder.withTask<PrepareTerraformApplyTask>("prepareTerraformApply")
-    val isAutoApproved =
-      stage
-        .context
-        .getOrDefault("isAutoApproved", false)
-        .toString()
-        .equals("true", ignoreCase = true)
-    if (!isAutoApproved) {
-      builder.withTask<WaitForManualJudgmentTask>("waitForManualJudgment")
+    // The empty tasks are workaround since Orca doesn't support loops that aren't surrounded with tasks
+    builder.withTask<EmptyTask>("emptyTask")
+    builder.withLoop { subGraph ->
+      subGraph
+        .withTask<RunInnerJobTask>("runInnerJob")
+        .withTask<MonitorInnerJobTask>("monitorJob")
+        .withTask<PromoteInnerOutputsTask>("promoteInnerOutputs")
+        .withTask<WaitOnInnerJobCompletionTask>("waitOnInnerJobCompletion")
+        .withTask<BindInnerProducedArtifactsTask>("bindInnerProducedArtifacts")
+        .withTask<ConsumeInnerArtifactTask>("consumeInnerArtifact")
+        .withTask<HandleInnerJobResultAndApprovalTask>("handleInnerJobResultAndApproval")
     }
-
-    // Apply
-    appendTerraformStage("terraformApply", stage, builder)
+    builder.withTask<EmptyTask>("emptyTask")
   }
 
-  private fun appendTerraformStage(
-    innerJobName: String,
-    stage: StageExecution,
-    builder: TaskNode.Builder
-  ) {
-    val jobSuffix = innerJobName.capitalize()
-
-    builder.withTask<RunInnerJobTask>("runInnerJob$jobSuffix")
-    builder.withTask<MonitorInnerJobTask>("monitorJob$jobSuffix")
-    builder.withTask<PromoteInnerOutputsTask>("promoteInnerOutputs$jobSuffix")
-    builder.withTask<WaitOnInnerJobCompletionTask>("waitOnInnerJobCompletion$jobSuffix")
-
-    getInnerJobContext(stage, innerJobName)?.let { innerJobContext ->
-      if (innerJobContext.containsKey("expectedArtifacts")) {
-        builder.withTask<BindInnerProducedArtifactsTask>("bindInnerProducedArtifacts$jobSuffix")
-      }
-
-      if (innerJobContext
-          .getOrDefault("consumeArtifactSource", "")
-          .toString()
-          .equals("artifact", ignoreCase = true)
-      ) {
-        builder.withTask<ConsumeInnerArtifactTask>("consumeInnerArtifact$jobSuffix")
-      }
-    }
-  }
-
-  private fun prepareInnerJobForRestart(stage: StageExecution, innerJobName: String) {
+  private fun prepareInnerJobForRestart(stage: StageExecution, innerJob: InnerJob) {
     val clearedContext =
-      getInnerJobContext(stage, innerJobName)?.filterKeys {
+      getInnerJobContext(stage, innerJob)?.filterKeys {
         !INNER_KEYS_TO_CLEAR_ON_RESTART.contains(it)
       }
 
-    clearedContext?.let { stage.context[innerJobName] = it }
+    clearedContext?.let { stage.context[innerJob.innerJobKey] = it }
   }
 
   override fun prepareStageForRestart(stage: StageExecution) {
-    super.prepareStageForRestart(stage)
+    TerraformStageInnerJob.values().forEach { prepareInnerJobForRestart(stage, it) }
 
-    stage.context["currentInnerJob"] = "terraformPlan"
-    listOf("terraformPlan", "terraformApply").forEach { prepareInnerJobForRestart(stage, it) }
+    stage.context.remove("judgmentStatus")
+    stage.context.remove("lastModifiedBy")
+    stage.context["currentInnerJob"] = TerraformStageInnerJob.PLAN.key
+  }
+
+  override fun cancel(stage: StageExecution): CancellableStage.Result {
+    TODO("Not yet implemented")
   }
 }

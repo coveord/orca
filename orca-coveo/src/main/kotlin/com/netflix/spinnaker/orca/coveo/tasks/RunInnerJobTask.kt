@@ -54,7 +54,7 @@ class RunInnerJobTask(
     jobContext.putAll(nestedKubernetesJobRunner.getAdditionalOutputs(stage, operations))
 
     return TaskResult.builder(ExecutionStatus.SUCCEEDED)
-      .context(jobContext + getUpdatedInnerJobContext(stage, jobContext))
+      .context(jobContext + getUpdatedContextWithInnerJob(stage, jobContext))
       .build()
   }
 

@@ -1,7 +1,7 @@
 /*
- * Copyright 2021 Coveo Solutions Inc.
+ * Copyright 2021 Coveo Solutions inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -12,11 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package com.netflix.spinnaker.orca.coveo.config
+package com.netflix.spinnaker.orca.coveo.tasks.job
 
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
-
-@Configuration @ComponentScan("com.netflix.spinnaker.orca.coveo") class CoveoConfiguration
+interface InnerJob {
+  val innerJobKey: String
+}

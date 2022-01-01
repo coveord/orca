@@ -17,29 +17,15 @@
 
 package com.netflix.spinnaker.orca.coveo.tasks
 
+import com.netflix.spinnaker.orca.api.pipeline.Task
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult
 import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
-import com.netflix.spinnaker.orca.coveo.tasks.job.InnerJobAware
-import com.netflix.spinnaker.orca.pipeline.tasks.artifacts.BindProducedArtifactsTask
 import org.springframework.stereotype.Component
 
-private val OUTPUTS_TO_COPY = setOf("artifacts", "resolvedExpectedArtifacts")
-
 @Component
-class BindInnerProducedArtifactsTask : InnerJobAware, BindProducedArtifactsTask() {
+class EmptyTask : Task {
   override fun execute(stage: StageExecution): TaskResult {
-    val nothingToDo = !getCurrentInnerJobContext(stage).containsKey("expectedArtifacts")
-    if (nothingToDo) {
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).build()
-    }
-
-    val taskResult = super.execute(stage)
-    val jobOutputsToCopy = getOutputsToCopy(taskResult, OUTPUTS_TO_COPY)
-
-    return TaskResult.builder(taskResult.status)
-      .context(taskResult.context + getUpdatedContextWithInnerJob(stage, jobOutputsToCopy))
-      .outputs(taskResult.outputs + getUpdatedOutputsWithInnerJob(stage, jobOutputsToCopy))
-      .build()
+    return TaskResult.builder(ExecutionStatus.SUCCEEDED).build()
   }
 }

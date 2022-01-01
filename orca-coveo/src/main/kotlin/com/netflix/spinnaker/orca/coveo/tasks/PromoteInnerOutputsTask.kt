@@ -24,7 +24,7 @@ import com.netflix.spinnaker.orca.coveo.tasks.job.InnerJobAware
 import org.springframework.stereotype.Component
 
 private val OUTPUTS_TO_COPY =
-  listOf(
+  setOf(
     "artifacts",
     "outputs.boundArtifacts",
     "outputs.createdArtifacts",
@@ -36,10 +36,11 @@ private val OUTPUTS_TO_COPY =
 class PromoteInnerOutputsTask : InnerJobAware, PromoteManifestKatoOutputsTask() {
   override fun execute(stage: StageExecution): TaskResult {
     val taskResult = super.execute(stage)
-    val jobOutputs = getSelectedOutputs(taskResult, OUTPUTS_TO_COPY)
+    val jobOutputsToCopy = getOutputsToCopy(taskResult, OUTPUTS_TO_COPY)
 
     return TaskResult.builder(ExecutionStatus.SUCCEEDED)
-      .outputs(getUpdatedInnerJobOutputs(stage, jobOutputs))
+      .context(taskResult.context)
+      .outputs(taskResult.outputs + getUpdatedOutputsWithInnerJob(stage, jobOutputsToCopy))
       .build()
   }
 }

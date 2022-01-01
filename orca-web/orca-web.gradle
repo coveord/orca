@@ -29,6 +29,16 @@ run {
 mainClassName = 'com.netflix.spinnaker.orca.Main'
 
 dependencies {
+  implementation("io.sentry:sentry-spring-boot-starter:$sentryVersion") {
+    // Ensure to not upgrade transitive dependencies
+    exclude group: "com.squareup.okhttp3", module: "okhttp-bom"
+    exclude group: "org.springframework.boot", module: "spring-boot-dependencies"
+    exclude group: "org.springframework.boot", module: "spring-boot-starter"
+  }
+  implementation ("io.sentry:sentry-logback:$sentryVersion") {
+    // Ensure to not upgrade transitive dependencies
+    exclude group: "ch.qos.logback", module: "logback-classic"
+  }
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("net.logstash.logback:logstash-logback-encoder")
