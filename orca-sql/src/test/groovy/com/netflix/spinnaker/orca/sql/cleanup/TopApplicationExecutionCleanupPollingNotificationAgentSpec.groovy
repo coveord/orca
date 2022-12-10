@@ -43,7 +43,7 @@ import static java.time.temporal.ChronoUnit.DAYS
 abstract class TopApplicationExecutionCleanupPollingNotificationAgentSpec extends Specification {
   @Shared
   ObjectMapper mapper = OrcaObjectMapper.newInstance().with {
-    registerModule(new KotlinModule())
+    registerModule(new KotlinModule.Builder().build())
     it
   }
 
@@ -74,7 +74,8 @@ abstract class TopApplicationExecutionCleanupPollingNotificationAgentSpec extend
             exceptionApp2 : 5
         ]
     ),
-    new OrcaSqlProperties()
+    new OrcaSqlProperties(),
+    []
   )
 
   def setupSpec() {

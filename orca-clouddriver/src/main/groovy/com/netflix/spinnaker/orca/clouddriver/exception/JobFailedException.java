@@ -1,7 +1,7 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2021 Salesforce.com, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License")
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.netflix.spinnaker.orca.clouddriver
+package com.netflix.spinnaker.orca.clouddriver.exception;
 
-import retrofit.http.GET
-import retrofit.http.Path
+import com.netflix.spinnaker.kork.exceptions.IntegrationException;
 
-interface CloudDriverCacheStatusService {
-  @GET("/cache/{cloudProvider}/{type}")
-  Collection<Map> pendingForceCacheUpdates(@Path("cloudProvider") String cloudProvider,
-                                           @Path("type") String type)
+public class JobFailedException extends IntegrationException {
+  public JobFailedException(String message) {
+    super(message);
+  }
 }
