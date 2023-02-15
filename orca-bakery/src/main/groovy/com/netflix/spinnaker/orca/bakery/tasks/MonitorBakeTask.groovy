@@ -34,7 +34,7 @@ import retrofit.RetrofitError
 class MonitorBakeTask implements OverridableTimeoutRetryableTask {
 
   long backoffPeriod = 30000
-  long timeout = 3600000 // 1hr
+  long timeout = 7200000 // 2hr
 
   @Autowired(required = false)
   BakerySelector bakerySelector
